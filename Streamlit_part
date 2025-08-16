@@ -5,7 +5,7 @@ from torch import nn
 from torchvision import transforms
 from PIL import Image
 
-# 1. Define the same model class
+
 class DigitModel(nn.Module):
     def __init__(self):
         super().__init__()
@@ -19,12 +19,12 @@ class DigitModel(nn.Module):
     def forward(self, x):
         return self.net(x)
 
-# 2. Load the trained model
+
 model = DigitModel()
 model.load_state_dict(torch.load("mnist_model.pth", map_location=torch.device('cpu')))
 model.eval()
 
-# 3. Define preprocessing
+
 transform = transforms.Compose([
     transforms.Grayscale(),                      # Convert to grayscale
     transforms.Resize((28, 28)),                 # Resize to 28x28
@@ -33,7 +33,7 @@ transform = transforms.Compose([
     transforms.Normalize((0.1307,), (0.3081,))   # Normalize like MNIST
 ])
 
-# 4. Streamlit UI
+
 st.title("­ЪДа Digit Recognizer")
 st.write("Upload a handwritten digit image and I'll guess the number!")
 
@@ -43,7 +43,7 @@ if uploaded_file:
     image = Image.open(uploaded_file)
     st.image(image, caption="Uploaded Image", use_column_width=True)
 
-    # Preprocess and predict
+
     input_tensor = transform(image).unsqueeze(0)  # Add batch dimension
     st.write("Tensor Shape:", input_tensor.shape)
     st.write("Tensor Values:", input_tensor[0][0][10:18, 10:18])  # Small patch
