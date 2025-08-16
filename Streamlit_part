@@ -1,0 +1,55 @@
+import streamlit as st
+
+import torch
+from torch import nn
+from torchvision import transforms
+from PIL import Image
+
+# 1. Define the same model class
+class DigitModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(28*28, 128),
+            nn.ReLU(),
+            nn.Linear(128, 10)
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+# 2. Load the trained model
+model = DigitModel()
+model.load_state_dict(torch.load("mnist_model.pth", map_location=torch.device('cpu')))
+model.eval()
+
+# 3. Define preprocessing
+transform = transforms.Compose([
+    transforms.Grayscale(),                      # Convert to grayscale
+    transforms.Resize((28, 28)),                 # Resize to 28x28
+    transforms.ToTensor(),                       # Convert to tensor
+    transforms.Lambda(lambda x: 1 - x),          # Invert manually
+    transforms.Normalize((0.1307,), (0.3081,))   # Normalize like MNIST
+])
+
+# 4. Streamlit UI
+st.title("­ЪДа Digit Recognizer")
+st.write("Upload a handwritten digit image and I'll guess the number!")
+
+uploaded_file = st.file_uploader("Choose an image", type=["png", "jpg", "jpeg"])
+
+if uploaded_file:
+    image = Image.open(uploaded_file)
+    st.image(image, caption="Uploaded Image", use_column_width=True)
+
+    # Preprocess and predict
+    input_tensor = transform(image).unsqueeze(0)  # Add batch dimension
+    st.write("Tensor Shape:", input_tensor.shape)
+    st.write("Tensor Values:", input_tensor[0][0][10:18, 10:18])  # Small patch
+    with torch.no_grad():
+        output = model(input_tensor)
+        st.write("Raw Output:", output)
+        prediction = output.argmax(dim=1).item()
+
+    st.success(f"Predicted Digit: {prediction}")
